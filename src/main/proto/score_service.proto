@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package rhythmgame;
+
+option java_multiple_files = true;
+option java_package = "com.rhythmgame.proto";
+
+// ============================================================
+// ScoreService - 랭킹 조회
+// ============================================================
+service ScoreService {
+
+  // 곡별 랭킹 조회
+  rpc GetRanking (GetRankingRequest) returns (GetRankingResponse);
+
+  // 내 최고 점수 조회
+  rpc GetMyBestScores (GetMyBestScoresRequest) returns (GetMyBestScoresResponse);
+}
+
+message GetRankingRequest {
+  string song_id = 1;
+  string difficulty = 2;
+  int32 top_n = 3;                 // 상위 N명 (기본 50)
+}
+
+message GetRankingResponse {
+  repeated RankEntry entries = 1;
+  RankEntry my_rank = 2;           // 내 순위 (로그인 시)
+}
+
+message RankEntry {
+  int32 rank = 1;
+  string player_id = 2;
+  string player_name = 3;
+  int32 score = 4;
+  int32 max_combo = 5;
+  string grade = 6;
+  int64 played_at = 7;
+}
+
+message GetMyBestScoresRequest {
+  string player_id = 1;
+}
+
+message GetMyBestScoresResponse {
+  repeated PersonalBest scores = 1;
+}
+
+message PersonalBest {
+  string song_id = 1;
+  string song_title = 2;
+  string difficulty = 3;
+  int32 best_score = 4;
+  string grade = 5;
+  int32 play_count = 6;
+}

@@ -1,0 +1,154 @@
+syntax = "proto3";
+
+package rhythmgame;
+
+option java_multiple_files = true;
+option java_package = "com.rhythmgame.proto";
+
+// ============================================================
+// GameService - 핵심: 양방향 스트리밍 노트 판정
+// ============================================================
+service GameService {
+
+  // 양방향 스트리밍 — 곡 플레이 중 실시간 노트 판정
+  // Client: NoteResult(timing_offset_ms) 전송
+  // Server: JudgeResponse(판정, 점수, 콤보, HP) 응답
+  rpc PlayStream (stream PlayRequest) returns (stream PlayResponse);
+
+  // 곡 목록 조회
+  rpc GetSongList (GetSongListRequest) returns (GetSongListResponse);
+
+  // 곡 상세 (노트 수, 난이도별 정보)
+  rpc GetSongDetail (GetSongDetailRequest) returns (SongDetail);
+}
+
+// --- PlayStream Messages ---
+
+message PlayRequest {
+  oneof request {
+    StartSongRequest start_song = 1;
+    NoteHitRequest note_hit = 2;
+    EndSongRequest end_song = 3;
+  }
+}
+
+message PlayResponse {
+  oneof response {
+    SongReadyResponse song_ready = 1;
+    NoteJudgeResponse note_judge = 2;
+    FinalResultResponse final_result = 3;
+  }
+}
+
+// 곡 시작 요청
+message StartSongRequest {
+  string player_id = 1;
+  string song_id = 2;
+  Difficulty difficulty = 3;
+  repeated string equipped_card_ids = 4; // 장착 카드 (보너스 점수)
+}
+
+// 서버가 준비 완료 알림
+message SongReadyResponse {
+  string session_id = 1;
+  int32 total_notes = 2;
+  int32 bpm = 3;
+  double duration_seconds = 4;
+}
+
+// 클라이언트가 노트 타이밍 전송 (핵심 — 서버에서 판정)
+message NoteHitRequest {
+  int32 note_index = 1;            // 몇 번째 노트인지
+  int64 timing_offset_ms = 2;      // 판정선 기준 오프셋 (음수=빠름, 양수=느림)
+  NoteInputType input_type = 3;    // TAP, SLIDE, FLICK
+}
+
+// 서버 판정 결과
+message NoteJudgeResponse {
+  int32 note_index = 1;
+  Judgment judgment = 2;           // MARVELOUS ~ MISS
+  int32 note_score = 3;           // 이 노트에서 획득한 점수
+  int32 total_score = 4;          // 누적 점수
+  int32 combo = 5;                // 현재 콤보
+  int32 max_combo = 6;            // 최대 콤보
+  double hp_percent = 7;          // 남은 HP (0이면 실패)
+  bool card_bonus_active = 8;     // 카드 보너스 구간 여부
+}
+
+// 곡 종료
+message EndSongRequest {
+  string reason = 1; // COMPLETED, HP_ZERO, QUIT
+}
+
+// 최종 결과
+message FinalResultResponse {
+  int32 total_score = 1;
+  int32 max_combo = 2;
+  int32 marvelous_count = 3;
+  int32 excellent_count = 4;
+  int32 good_count = 5;
+  int32 fair_count = 6;
+  int32 miss_count = 7;
+  string grade = 8;               // SSS, SS, S, A, B, C, F
+  int32 ranking = 9;              // 이 곡 전체 순위
+  bool new_record = 10;           // 개인 최고 기록 갱신 여부
+  repeated RewardItem rewards = 11;
+}
+
+// --- Song List ---
+
+message GetSongListRequest {
+  string artist_filter = 1;       // 아티스트 필터 (빈 값이면 전체)
+}
+
+message GetSongListResponse {
+  repeated SongSummary songs = 1;
+}
+
+message SongSummary {
+  string song_id = 1;
+  string title = 2;
+  string artist = 3;
+  repeated Difficulty available_difficulties = 4;
+}
+
+message GetSongDetailRequest {
+  string song_id = 1;
+}
+
+message SongDetail {
+  string song_id = 1;
+  string title = 2;
+  string artist = 3;
+  int32 bpm = 4;
+  double duration_seconds = 5;
+  map<string, int32> note_counts = 6; // difficulty -> noteCount
+}
+
+// --- Enums ---
+
+enum Difficulty {
+  EASY = 0;
+  NORMAL = 1;
+  HARD = 2;
+  SUPER_HARD = 3;
+}
+
+enum NoteInputType {
+  TAP = 0;
+  SLIDE = 1;
+  FLICK = 2;
+}
+
+enum Judgment {
+  MARVELOUS = 0;   // ±20ms
+  EXCELLENT = 1;   // ±50ms
+  GOOD = 2;        // ±100ms
+  FAIR = 3;        // ±150ms
+  MISS = 4;        // >150ms 또는 미입력
+}
+
+message RewardItem {
+  string type = 1;     // GOLD, RHYTHM_CUBE, EXP_CARD
+  int32 amount = 2;
+}

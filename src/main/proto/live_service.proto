@@ -1,0 +1,160 @@
+syntax = "proto3";
+
+package rhythmgame;
+
+option java_multiple_files = true;
+option java_package = "com.rhythmgame.proto";
+
+// ============================================================
+// LiveService - 최대 8인 실시간 멀티플레이
+// ============================================================
+service LiveService {
+
+  // 로비 입장 → Server Stream으로 로비 상태 변경 실시간 수신
+  rpc JoinLobby (JoinLobbyRequest) returns (stream LobbyEvent);
+
+  // 곡 투표
+  rpc VoteSong (VoteSongRequest) returns (VoteSongResponse);
+
+  // 라이브 플레이 — 양방향 스트리밍
+  // 각 참가자의 노트 판정을 서버에서 처리 + 전원에게 점수 브로드캐스트
+  rpc StartLive (stream LivePlayRequest) returns (stream LivePlayResponse);
+
+  // 로비 나가기
+  rpc LeaveLobby (LeaveLobbyRequest) returns (LeaveLobbyResponse);
+}
+
+// --- Lobby ---
+
+message JoinLobbyRequest {
+  string player_id = 1;
+  string player_name = 2;
+  string artist_filter = 3;      // 선호 아티스트 (매칭 기준)
+}
+
+message LobbyEvent {
+  oneof event {
+    PlayerJoinedEvent player_joined = 1;
+    PlayerLeftEvent player_left = 2;
+    VoteUpdateEvent vote_update = 3;
+    CountdownEvent countdown = 4;
+    LiveStartEvent live_start = 5;
+  }
+}
+
+message PlayerJoinedEvent {
+  string lobby_id = 1;
+  string player_id = 2;
+  string player_name = 3;
+  int32 current_player_count = 4;
+  int32 max_players = 5;          // 8
+}
+
+message PlayerLeftEvent {
+  string player_id = 1;
+  int32 current_player_count = 2;
+}
+
+message VoteUpdateEvent {
+  map<string, int32> song_votes = 1; // songId -> vote count
+  int32 remaining_seconds = 2;
+}
+
+message CountdownEvent {
+  int32 remaining_seconds = 1;     // 30초 카운트다운
+  string selected_song_id = 2;     // 확정된 곡 (카운트 0일 때)
+}
+
+message LiveStartEvent {
+  string song_id = 1;
+  string song_title = 2;
+  int32 total_notes = 3;
+  repeated LivePlayer players = 4;
+}
+
+message LivePlayer {
+  string player_id = 1;
+  string player_name = 2;
+  int32 card_bonus_percent = 3;
+}
+
+// --- Vote ---
+
+message VoteSongRequest {
+  string lobby_id = 1;
+  string player_id = 2;
+  string song_id = 3;
+}
+
+message VoteSongResponse {
+  bool accepted = 1;
+}
+
+// --- Live Play ---
+
+message LivePlayRequest {
+  oneof request {
+    LiveReadyRequest ready = 1;
+    LiveNoteHitRequest note_hit = 2;
+  }
+}
+
+message LiveReadyRequest {
+  string lobby_id = 1;
+  string player_id = 2;
+}
+
+message LiveNoteHitRequest {
+  int32 note_index = 1;
+  int64 timing_offset_ms = 2;
+}
+
+message LivePlayResponse {
+  oneof response {
+    LiveAllReadyResponse all_ready = 1;
+    LiveScoreUpdate score_update = 2;
+    LiveFinalResult final_result = 3;
+  }
+}
+
+message LiveAllReadyResponse {
+  int64 start_timestamp_ms = 1;    // 모든 플레이어 동시 시작 시각
+}
+
+// 실시간 점수 브로드캐스트 (모든 참가자에게 전송)
+message LiveScoreUpdate {
+  repeated PlayerScore player_scores = 1;
+}
+
+message PlayerScore {
+  string player_id = 1;
+  string player_name = 2;
+  int32 score = 3;
+  int32 combo = 4;
+  string last_judgment = 5;        // MARVELOUS, EXCELLENT, ...
+}
+
+message LiveFinalResult {
+  repeated PlayerRankEntry rankings = 1;
+  int32 combined_score = 2;        // 전원 합산 점수
+}
+
+message PlayerRankEntry {
+  int32 rank = 1;
+  string player_id = 2;
+  string player_name = 3;
+  int32 score = 4;
+  int32 max_combo = 5;
+  string mvp_badge = 6;            // HIGHEST_COMBO, MOST_MARVELOUS 등
+}
+
+// --- Leave ---
+
+message LeaveLobbyRequest {
+  string lobby_id = 1;
+  string player_id = 2;
+}
+
+message LeaveLobbyResponse {
+  bool success = 1;
+}

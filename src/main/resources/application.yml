@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: grpc-rhythm-game
+
+  datasource:
+    url: jdbc:h2:mem:rhythmgame;MODE=MYSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  h2:
+    console:
+      enabled: true
+
+grpc:
+  server:
+    port: 9090
+
+server:
+  port: 8080
