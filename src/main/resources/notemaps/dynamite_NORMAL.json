@@ -1,0 +1,30 @@
+{
+  "songId": "dynamite",
+  "title": "Dynamite",
+  "artist": "BTS",
+  "bpm": 114,
+  "durationSeconds": 30.0,
+  "difficulty": "NORMAL",
+  "notes": [
+    {"index": 0, "timestampMs": 1500, "inputType": "TAP", "memberPart": "JUNGKOOK"},
+    {"index": 1, "timestampMs": 2025, "inputType": "TAP", "memberPart": "JIMIN"},
+    {"index": 2, "timestampMs": 2550, "inputType": "SLIDE", "memberPart": "V"},
+    {"index": 3, "timestampMs": 3075, "inputType": "TAP", "memberPart": "RM"},
+    {"index": 4, "timestampMs": 3600, "inputType": "FLICK", "memberPart": "SUGA"},
+    {"index": 5, "timestampMs": 4125, "inputType": "TAP", "memberPart": "JIN"},
+    {"index": 6, "timestampMs": 4650, "inputType": "TAP", "memberPart": "JHOPE"},
+    {"index": 7, "timestampMs": 5175, "inputType": "SLIDE", "memberPart": "JUNGKOOK"},
+    {"index": 8, "timestampMs": 5700, "inputType": "TAP", "memberPart": "JIMIN"},
+    {"index": 9, "timestampMs": 6225, "inputType": "TAP", "memberPart": "V"},
+    {"index": 10, "timestampMs": 6750, "inputType": "FLICK", "memberPart": "RM"},
+    {"index": 11, "timestampMs": 7275, "inputType": "TAP", "memberPart": "SUGA"},
+    {"index": 12, "timestampMs": 7800, "inputType": "TAP", "memberPart": "JIN"},
+    {"index": 13, "timestampMs": 8325, "inputType": "SLIDE", "memberPart": "JHOPE"},
+    {"index": 14, "timestampMs": 8850, "inputType": "TAP", "memberPart": "JUNGKOOK"},
+    {"index": 15, "timestampMs": 9375, "inputType": "TAP", "memberPart": "JIMIN"},
+    {"index": 16, "timestampMs": 9900, "inputType": "FLICK", "memberPart": "V"},
+    {"index": 17, "timestampMs": 10425, "inputType": "TAP", "memberPart": "RM"},
+    {"index": 18, "timestampMs": 10950, "inputType": "TAP", "memberPart": "SUGA"},
+    {"index": 19, "timestampMs": 11475, "inputType": "SLIDE", "memberPart": "JIN"}
+  ]
+}
