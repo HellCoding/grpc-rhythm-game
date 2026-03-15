@@ -1,0 +1,39 @@
+direction: down
+
+title: "Catch Live - Multiplayer (8 Players)" {
+  style.font-size: 24
+  style.font-color: "#ffffff"
+  style.fill: "#1a1a2e"
+  near: top-center
+}
+
+p1: "Player 1" {shape: person; style.fill: "#e94560"; style.font-color: "#ffffff"}
+p2: "Player 2" {shape: person; style.fill: "#e94560"; style.font-color: "#ffffff"}
+s: "LiveService" {style.fill: "#6DB33F"; style.font-color: "#ffffff"}
+r: "Redis / Lobby" {shape: cylinder; style.fill: "#f0a500"; style.font-color: "#1a1a2e"}
+
+p1 -> s: "1. JoinLobby (Server Stream)" {style.stroke: "#53bf9d"}
+s -> r: "2. Create/Find Lobby" {style.stroke: "#f0a500"}
+s -> p1: "3. LobbyEvent(PlayerJoined)" {style.stroke: "#53bf9d"}
+
+p2 -> s: "4. JoinLobby (Server Stream)" {style.stroke: "#53bf9d"}
+s -> p1: "5a. LobbyEvent(PlayerJoined: P2)" {style.stroke: "#bd93f9"}
+s -> p2: "5b. LobbyEvent(PlayerJoined: P2)" {style.stroke: "#bd93f9"}
+
+p1 -> s: "6a. VoteSong(\"dynamite\")" {style.stroke: "#e94560"}
+p2 -> s: "6b. VoteSong(\"dynamite\")" {style.stroke: "#e94560"}
+s -> p1: "7a. LobbyEvent(Countdown -> 0)" {style.stroke: "#f0a500"}
+s -> p2: "7b. LobbyEvent(Countdown -> 0)" {style.stroke: "#f0a500"}
+
+p1 -> s: "8a. LivePlayRequest(Ready)" {style.stroke: "#53bf9d"}
+p2 -> s: "8b. LivePlayRequest(Ready)" {style.stroke: "#53bf9d"}
+s -> p1: "9a. LivePlayResponse(AllReady)" {style.stroke: "#53bf9d"}
+s -> p2: "9b. LivePlayResponse(AllReady)" {style.stroke: "#53bf9d"}
+
+p1 -> s: "10a. NoteHit(index, offset)" {style.stroke: "#e94560"}
+p2 -> s: "10b. NoteHit(index, offset)" {style.stroke: "#e94560"}
+s -> p1: "11a. LiveScoreUpdate\n(P1:8500, P2:7200)" {style.stroke: "#bd93f9"}
+s -> p2: "11b. LiveScoreUpdate\n(P1:8500, P2:7200)" {style.stroke: "#bd93f9"}
+
+s -> p1: "12a. LiveFinalResult\n(rankings, combined_score)" {style.stroke: "#53bf9d"}
+s -> p2: "12b. LiveFinalResult\n(rankings, combined_score)" {style.stroke: "#53bf9d"}

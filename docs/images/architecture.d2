@@ -1,0 +1,50 @@
+direction: right
+
+client: "Mobile Client" {
+  style.fill: "#0f3460"
+  style.font-color: "#ffffff"
+
+  c1: "Player 1" {style.fill: "#1a1a2e"; style.font-color: "#ffffff"}
+  c2: "Player 2" {style.fill: "#1a1a2e"; style.font-color: "#ffffff"}
+  c3: "Player N (max 8)" {style.fill: "#1a1a2e"; style.font-color: "#ffffff"}
+}
+
+grpc: "gRPC Server :9090" {
+  style.fill: "#0a3d62"
+  style.font-color: "#ffffff"
+
+  gs: "GameService\nBidirectional Stream\n노트 판정" {style.fill: "#1a1a2e"; style.font-color: "#ffffff"}
+  ls: "LiveService\nLobby: Server Stream\nPlay: Bidi Stream" {style.fill: "#1a1a2e"; style.font-color: "#ffffff"}
+  ss: "ScoreService\nUnary RPC\n랭킹 조회" {style.fill: "#1a1a2e"; style.font-color: "#ffffff"}
+}
+
+engine: "Server Engine" {
+  style.fill: "#16213e"
+  style.font-color: "#ffffff"
+
+  je: "JudgeEngine\n±20ms MARVELOUS\n±50ms EXCELLENT\n±100ms GOOD\n±150ms FAIR" {style.fill: "#1a1a2e"; style.font-color: "#ffffff"}
+  ac: "Anti-Cheat\n중복 판정 차단\n순서 검증\ntiming 범위 검증" {style.fill: "#1a1a2e"; style.font-color: "#ffffff"}
+  nm: "NoteMapLoader\nJSON → 메모리 캐시" {style.fill: "#1a1a2e"; style.font-color: "#ffffff"}
+}
+
+data: "Data Layer" {
+  style.fill: "#0f3460"
+  style.font-color: "#ffffff"
+
+  h2: "H2 / MySQL\nScore Records" {shape: cylinder; style.fill: "#4169E1"; style.font-color: "#ffffff"}
+  redis: "Redis\nSession · Lobby" {shape: cylinder; style.fill: "#e94560"; style.font-color: "#ffffff"}
+}
+
+client.c1 -> grpc.gs: "Bidi Stream" {style.stroke: "#53bf9d"}
+client.c1 -> grpc.ls: "Server Stream" {style.stroke: "#53bf9d"}
+client.c2 -> grpc.ls: "Bidi Stream" {style.stroke: "#53bf9d"}
+client.c3 -> grpc.ls: "Bidi Stream" {style.stroke: "#53bf9d"}
+client.c1 -> grpc.ss: "Unary" {style.stroke: "#53bf9d"}
+
+grpc.gs -> engine.je {style.stroke: "#f0a500"}
+grpc.gs -> engine.ac {style.stroke: "#f0a500"}
+grpc.gs -> engine.nm {style.stroke: "#f0a500"}
+grpc.ls -> engine.je {style.stroke: "#f0a500"}
+
+grpc.ss -> data.h2 {style.stroke: "#e94560"}
+grpc.gs -> data.h2 {style.stroke: "#e94560"}

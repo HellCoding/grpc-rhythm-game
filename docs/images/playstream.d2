@@ -1,0 +1,27 @@
+direction: down
+
+title: "PlayStream (Bidirectional Streaming)" {
+  style.font-size: 24
+  style.font-color: "#ffffff"
+  style.fill: "#1a1a2e"
+  near: top-center
+}
+
+c: "Client" {shape: person; style.fill: "#e94560"; style.font-color: "#ffffff"}
+s: "GameService" {style.fill: "#6DB33F"; style.font-color: "#ffffff"}
+j: "JudgeEngine" {style.fill: "#f0a500"; style.font-color: "#1a1a2e"}
+db: "MySQL" {shape: cylinder; style.fill: "#4169E1"; style.font-color: "#ffffff"}
+
+c -> s: "1. PlayRequest(StartSong)" {style.stroke: "#53bf9d"}
+s -> s: "노트맵 로드, 세션 생성" {style.stroke: "#888888"}
+s -> c: "2. PlayResponse(SongReady)" {style.stroke: "#53bf9d"}
+
+c -> s: "3. PlayRequest(NoteHit)\nnote_index + timing_offset_ms\n(500+ notes loop)" {style.stroke: "#e94560"}
+s -> j: "4. judgeNote(index, offset)" {style.stroke: "#f0a500"}
+j -> s: "5. judgment + score\n+ combo + HP" {style.stroke: "#f0a500"}
+s -> c: "6. PlayResponse(NoteJudge)" {style.stroke: "#53bf9d"}
+
+s -> c: "7a. PlayResponse(FinalResult)\n[FAILED] if HP reaches 0" {style.stroke: "#ff6b6b"}
+c -> s: "7b. PlayRequest(EndSong)\nif song completed" {style.stroke: "#53bf9d"}
+s -> db: "8. Save score record" {style.stroke: "#4169E1"}
+s -> c: "9. PlayResponse(FinalResult)\n[grade, rank]" {style.stroke: "#53bf9d"}

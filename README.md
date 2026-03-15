@@ -22,75 +22,13 @@ HTTP/2 양방향 스트리밍으로 실시간 노트 판정, 멀티플레이 동
 
 ## Architecture
 
-```mermaid
-graph TB
-    subgraph Client["Mobile Client"]
-        C1["Player 1"]
-        C2["Player 2"]
-        C3["Player N (max 8)"]
-    end
-
-    subgraph gRPC["gRPC Server :9090"]
-        GS["GameService<br/>Bidirectional Stream<br/>노트 판정"]
-        LS["LiveService<br/>Lobby: Server Stream<br/>Play: Bidi Stream"]
-        SS["ScoreService<br/>Unary RPC<br/>랭킹 조회"]
-    end
-
-    subgraph Engine["Server Engine"]
-        JE["JudgeEngine<br/>±20ms MARVELOUS<br/>±50ms EXCELLENT<br/>±100ms GOOD<br/>±150ms FAIR"]
-        AC["Anti-Cheat<br/>중복 판정 차단<br/>순서 검증<br/>timing 범위 검증"]
-        NM["NoteMapLoader<br/>JSON → 메모리 캐시"]
-    end
-
-    subgraph Data["Data Layer"]
-        H2["H2 / MySQL<br/>Score Records"]
-        REDIS["Redis<br/>Session · Lobby"]
-    end
-
-    C1 -- "Bidi Stream" --> GS
-    C1 -- "Server Stream" --> LS
-    C2 -- "Bidi Stream" --> LS
-    C3 -- "Bidi Stream" --> LS
-    C1 -- "Unary" --> SS
-    GS --> JE
-    GS --> AC
-    GS --> NM
-    LS --> JE
-    SS --> H2
-    GS --> H2
-```
+![Architecture](docs/images/architecture.png)
 
 ## Core: PlayStream (Bidirectional Streaming)
 
 곡 플레이의 전체 라이프사이클을 **하나의 gRPC 스트림**에서 처리합니다.
 
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant S as GameService
-    participant J as JudgeEngine
-    participant DB as MySQL
-
-    C->>S: PlayRequest(StartSong)
-    Note over S: 노트맵 로드, 세션 생성
-    S->>C: PlayResponse(SongReady)
-
-    loop 500+ notes
-        C->>S: PlayRequest(NoteHit)<br/>note_index + timing_offset_ms
-        S->>J: judgeNote(index, offset)
-        Note over J: ±20ms → MARVELOUS<br/>±50ms → EXCELLENT<br/>±100ms → GOOD<br/>±150ms → FAIR<br/>>150ms → MISS
-        J-->>S: judgment + score + combo + HP
-        S->>C: PlayResponse(NoteJudge)
-    end
-
-    alt HP reaches 0
-        S->>C: PlayResponse(FinalResult) [FAILED]
-    else Song completed
-        C->>S: PlayRequest(EndSong)
-        S->>DB: Save score record
-        S->>C: PlayResponse(FinalResult) [grade, rank]
-    end
-```
+![PlayStream](docs/images/playstream.png)
 
 **서버 판정이 핵심** — 클라이언트가 "MARVELOUS 500개"라고 보내면 조작 가능.
 대신 `timing_offset_ms`만 전송하면 서버가 노트맵과 대조하여 판정합니다.
@@ -125,43 +63,7 @@ public JudgeResult judgeNote(int noteIndex, long timingOffsetMs) {
 
 ## Multiplayer: Catch Live (8 Players)
 
-```mermaid
-sequenceDiagram
-    participant P1 as Player 1
-    participant P2 as Player 2
-    participant S as LiveService
-    participant R as Redis/Lobby
-
-    P1->>S: JoinLobby (Server Stream)
-    S->>R: Create/Find Lobby
-    S->>P1: LobbyEvent(PlayerJoined)
-
-    P2->>S: JoinLobby (Server Stream)
-    S->>P1: LobbyEvent(PlayerJoined: P2)
-    S->>P2: LobbyEvent(PlayerJoined: P2)
-
-    Note over S: 2명 이상 → 30초 투표 시작
-    P1->>S: VoteSong("dynamite")
-    P2->>S: VoteSong("dynamite")
-    S->>P1: LobbyEvent(Countdown → 0, song=dynamite)
-    S->>P2: LobbyEvent(Countdown → 0, song=dynamite)
-
-    Note over S: StartLive (Bidi Stream)
-    P1->>S: LivePlayRequest(Ready)
-    P2->>S: LivePlayRequest(Ready)
-    S->>P1: LivePlayResponse(AllReady, startTimestamp)
-    S->>P2: LivePlayResponse(AllReady, startTimestamp)
-
-    loop Play
-        P1->>S: NoteHit(index, offset)
-        P2->>S: NoteHit(index, offset)
-        S->>P1: LiveScoreUpdate(P1:8500, P2:7200)
-        S->>P2: LiveScoreUpdate(P1:8500, P2:7200)
-    end
-
-    S->>P1: LiveFinalResult(rankings, combined_score)
-    S->>P2: LiveFinalResult(rankings, combined_score)
-```
+![Multiplayer](docs/images/multiplayer.png)
 
 ## gRPC Service 구조
 
